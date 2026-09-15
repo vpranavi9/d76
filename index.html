@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cosmic Strike - 2D Space Shooter</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- Canvas for rendering space, ships, and VFX -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- IN-GAME HUD OVERLAY -->
+    <div id="hud-overlay">
+      <!-- Top Row: Vitals, Score/Wave, and Action buttons -->
+      <div class="hud-top">
+        <!-- Left: Hull & Energy Shield Gauges -->
+        <div class="hud-panel status-bars">
+          <div class="bar-wrapper">
+            <span class="bar-label">HULL</span>
+            <div class="meter-track">
+              <div id="health-fill" class="meter-fill health" style="width: 100%;"></div>
+            </div>
+            <span id="health-val" class="bar-value">100</span>
+          </div>
+          <div class="bar-wrapper">
+            <span class="bar-label">SHIELD</span>
+            <div class="meter-track">
+              <div id="shield-fill" class="meter-fill shield" style="width: 100%;"></div>
+            </div>
+            <span id="shield-val" class="bar-value">100</span>
+          </div>
+        </div>
+
+        <!-- Center: Score, Wave & Combo Gauge -->
+        <div class="hud-panel score-box">
+          <span class="score-title">SCORE</span>
+          <span id="score-num" class="score-num">0</span>
+          <div class="combo-container">
+            <span id="combo-badge" class="combo-badge">x2 COMBO!</span>
+          </div>
+          <span id="wave-num" class="wave-display">WAVE 1</span>
+        </div>
+
+        <!-- Right: Pause & Audio Quick Actions -->
+        <div class="hud-actions">
+          <button id="btn-hud-audio" class="hud-btn" title="Toggle Sound">🔊 Sound</button>
+          <button id="btn-hud-pause" class="hud-btn" title="Pause Game">⏸ Pause</button>
+        </div>
+      </div>
+
+      <!-- Boss Warning & Health Bar -->
+      <div id="boss-hud">
+        <div class="boss-title-row">
+          <span id="boss-name">BOSS DREADNOUGHT</span>
+          <span>WARNING</span>
+        </div>
+        <div class="boss-meter-track">
+          <div id="boss-fill" class="boss-meter-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Center Wave/Boss Announcement Banner -->
+      <div id="alert-banner">
+        <h1 id="alert-title" class="alert-title">WAVE 1</h1>
+        <p id="alert-sub" class="alert-sub">INCOMING HOSTILES</p>
+      </div>
+
+      <!-- Bottom Row: Active Powerup Buffs & EMP Bombs -->
+      <div class="hud-bottom">
+        <!-- Active Buffs -->
+        <div id="powerup-indicators" class="powerup-indicators">
+          <div id="buff-shield" class="buff-pill shield">
+            <span>🛡 Barrier</span>
+            <span class="buff-timer">0s</span>
+          </div>
+          <div id="buff-rapid" class="buff-pill rapid">
+            <span>⚡ Rapid</span>
+            <span class="buff-timer">0s</span>
+          </div>
+          <div id="buff-spread" class="buff-pill spread">
+            <span>🔱 Spread</span>
+            <span class="buff-timer">0s</span>
+          </div>
+        </div>
+
+        <!-- EMP Bomb Ordnance -->
+        <div class="hud-panel bomb-panel">
+          <span class="bomb-label">EMP BOMBS [B]:</span>
+          <div class="bomb-icons">
+            <div class="bomb-dot"></div>
+            <div class="bomb-dot"></div>
+            <div class="bomb-dot empty"></div>
+            <div class="bomb-dot empty"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE TOUCH CONTROLS (Displayed on touch-capable devices) -->
+    <div id="mobile-controls">
+      <div id="joystick-zone" class="joystick-zone">
+        <div id="joystick-knob" class="joystick-knob"></div>
+      </div>
+      <div class="mobile-actions">
+        <button id="btn-touch-bomb" class="btn-touch bomb">💣 BOMB</button>
+        <button id="btn-touch-fire" class="btn-touch fire">🔥 FIRE</button>
+      </div>
+    </div>
+
+    <!-- START MISSION MODAL -->
+    <div id="start-modal" class="overlay-modal active">
+      <div class="modal-card">
+        <h1 class="modal-title">COSMIC STRIKE</h1>
+        <p class="modal-subtitle">Defend the sector against endless alien waves and dreadnoughts</p>
+
+        <div class="menu-buttons">
+          <button id="btn-start" class="btn-arcade">🚀 Launch Mission</button>
+          <button id="btn-instructions" class="btn-arcade secondary">📖 How to Play</button>
+        </div>
+
+        <div class="high-score-preview">
+          <div class="hs-item">
+            <span>All-Time Best</span>
+            <span id="hs-preview-score">0</span>
+          </div>
+          <div class="hs-item">
+            <span>Highest Wave</span>
+            <span id="hs-preview-wave">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTIONS MODAL -->
+    <div id="instructions-modal" class="overlay-modal">
+      <div class="modal-card">
+        <h2 class="modal-title">PILOT BRIEFING</h2>
+        <p class="modal-subtitle">Flight systems, hostiles, and ordnance guide</p>
+
+        <div class="instructions-scroll">
+          <div class="instruction-section">
+            <div class="instruction-heading">CONTROLS</div>
+            <div class="key-list">
+              <div class="key-item">
+                <span>Steer Starship</span>
+                <div><span class="kbd">W</span> <span class="kbd">A</span> <span class="kbd">S</span> <span class="kbd">D</span> or <span class="kbd">Arrows</span></div>
+              </div>
+              <div class="key-item">
+                <span>Primary Plasma Blaster</span>
+                <div><span class="kbd">Spacebar</span> or <span class="kbd">Left Click</span></div>
+              </div>
+              <div class="key-item">
+                <span>Detonate EMP Bomb</span>
+                <div><span class="kbd">B</span> or <span class="kbd">X</span></div>
+              </div>
+              <div class="key-item">
+                <span>Pause Tactical View</span>
+                <div><span class="kbd">P</span> or <span class="kbd">Esc</span></div>
+              </div>
+              <div class="key-item">
+                <span>Mobile Flight</span>
+                <div><span>Virtual Stick + Touch Buttons</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="instruction-section">
+            <div class="instruction-heading">POWER-UPS & SALVAGE</div>
+            <div class="guide-grid">
+              <span class="guide-icon" style="color: #00b4d8;">🛡</span>
+              <span><strong>Shield Barrier:</strong> Grants invulnerability & restores shield</span>
+              <span class="guide-icon" style="color: #ffb703;">⚡</span>
+              <span><strong>Rapid Fire:</strong> Ultra-fast hyper laser cadence</span>
+              <span class="guide-icon" style="color: #ff007f;">🔱</span>
+              <span><strong>Spread Cannon:</strong> 3-way divergent plasma barrage</span>
+              <span class="guide-icon" style="color: #06d6a0;">➕</span>
+              <span><strong>Nanite Repair:</strong> Instantly repairs +40 hull health</span>
+              <span class="guide-icon" style="color: #ffd166;">💣</span>
+              <span><strong>EMP Bomb:</strong> Wipes bullets & devastates screen</span>
+            </div>
+          </div>
+
+          <div class="instruction-section">
+            <div class="instruction-heading">HOSTILE THREATS</div>
+            <div class="guide-grid">
+              <span class="guide-icon" style="color: #ff0055;">🔻</span>
+              <span><strong>Scout Drone:</strong> Swift darting dive-bomber</span>
+              <span class="guide-icon" style="color: #ff4d6d;">✈</span>
+              <span><strong>Vanguard Fighter:</strong> Strafer with aimed twin lasers</span>
+              <span class="guide-icon" style="color: #ffb703;">🛸</span>
+              <span><strong>Heavy Dreadnought:</strong> Armored tank with 3-way cannon</span>
+              <span class="guide-icon" style="color: #9a8c98;">🌑</span>
+              <span><strong>Asteroid:</strong> Drifting rock that splits on impact</span>
+              <span class="guide-icon" style="color: #ef233c;">☠</span>
+              <span><strong>Boss Flagships:</strong> Mega-class warship every 5 waves</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-back-menu" class="btn-arcade secondary" style="width: 100%;">Return to Hangar</button>
+      </div>
+    </div>
+
+    <!-- PAUSE MODAL -->
+    <div id="pause-modal" class="overlay-modal">
+      <div class="modal-card">
+        <h2 class="modal-title">MISSION PAUSED</h2>
+        <p class="modal-subtitle">Systems in standby</p>
+
+        <div class="settings-group">
+          <div class="setting-row">
+            <span>Sound Effects Volume</span>
+            <input type="range" id="slider-sfx" min="0" max="1" step="0.05" value="0.7">
+          </div>
+          <div class="setting-row">
+            <span>Synth Music Volume</span>
+            <input type="range" id="slider-music" min="0" max="1" step="0.05" value="0.35">
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-pause-resume" class="btn-arcade">▶ Resume Mission</button>
+          <button id="btn-pause-restart" class="btn-arcade secondary">↺ Restart Mission</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER DEBRIEFING MODAL -->
+    <div id="game-over-modal" class="overlay-modal">
+      <div class="modal-card">
+        <h2 class="modal-title" style="color: var(--danger-red);">VESSEL DESTROYED</h2>
+        <p class="modal-subtitle">Mission Debriefing Report</p>
+
+        <div id="new-record-tag" class="new-record-tag" style="display: none;">★ NEW ALL-TIME RECORD! ★</div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Final Score</span>
+            <span id="final-score" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Sector Reached</span>
+            <span id="final-wave" class="stat-value">1</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Enemies Neutralized</span>
+            <span id="final-kills" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Combat Accuracy</span>
+            <span id="final-accuracy" class="stat-value">0%</span>
+          </div>
+          <div class="stat-box" style="grid-column: span 2;">
+            <span class="stat-label">Max Kill Combo</span>
+            <span id="final-combo" class="stat-value" style="color: var(--accent-gold);">x1</span>
+          </div>
+        </div>
+
+        <button id="btn-game-over-restart" class="btn-arcade">⚡ Deploy Next Vessel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/starfield.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
